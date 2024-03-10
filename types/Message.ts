@@ -9,9 +9,8 @@ export type WelcomeResponse = [
 
 export type CallRequest = [
     Action: 2,
-    CallId: string,
     Uri: string,
-    Arguments?: [...string[]],
+    Arguments?: string[],
 ]
 
 export type CallResponse = [

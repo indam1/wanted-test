@@ -1,80 +1,54 @@
 <template>
-  <RecycleScroller
-    v-slot="{ item }"
-    :items="resultLogs"
-    :item-size="24"
-    :page-mode="true"
-  >
-    <div class="logs">
-      <span
-        :style="style(item.Level)"
-        style="border-bottom: 1px solid grey"
-      >{{ item.Timestamp }}</span>
-      <span
-        :style="style(item.Level)"
-        style="border-bottom: 1px solid grey"
-      >{{ item.Level }}</span>
-      <span
-        :style="style(item.Level)"
-        style="border-bottom: 1px solid grey"
-      >{{ item.Message }}</span>
-      <span
-        :style="style(item.Level)"
-        style="border-bottom: 1px solid grey"
-      >{{ item.Source }}</span>
-    </div>
-  </RecycleScroller>
+    <RecycleScroller
+        v-slot="{ item }"
+        :items="resultLogs"
+        :item-size="24"
+        :page-mode="true"
+    >
+        <div class="logs">
+            <span :style="style(item.Level)">{{ item.Timestamp }}</span>
+            <span :style="style(item.Level)">{{ item.Level }}</span>
+            <span :style="style(item.Level)">{{ item.Message }}</span>
+            <span :style="style(item.Level)">{{ item.Source }}</span>
+        </div>
+    </RecycleScroller>
 </template>
 
 <script setup lang="ts">
-import {computed, shallowRef, watch} from "vue";
+import {computed} from "vue";
 import type {LogItem} from "../../types/Items";
-import {useWebsocketState} from "@/composables/useWebsocketState";
+import {useSubscription} from "@/composables/useSubscription";
+import type {LogLevel} from "@/constants";
 
-const { data } = useWebsocketState();
-
+const { logs } = useSubscription();
 
 const props = defineProps<{
     filterValue: string
-    canInteract: boolean
-}>()
+}>();
 
-watch(data, () => {
-    if (!data.value[2]?.Items) {
-        return;
-    }
-
-    if (data.value[2].Action === 0) {
-        logs.value = [...logs.value, ...data.value[2].Items];
-    } else if (data.value[2].Action === 3) {
-        logs.value = [...data.value[2].Items];
-    }
-})
-
-watch(() => props.canInteract, () => {
-    if (!props.canInteract) {
-        logs.value = [];
-    }
-})
-
-const style = (level: string) => {
+const color = (level: LogLevel) => {
     switch (level) {
         case 'TRACE':
-            return 'color: green';
+            return 'green';
         case 'WARN':
-            return 'color: yellow';
+        case 'INFO':
+            return 'yellow';
         case 'DEBUG':
-            return 'color: dodgerblue';
+            return 'dodgerblue';
         case 'FATAL':
-            return 'color: darkred';
+            return 'darkred';
         case 'ERROR':
-            return 'color: red';
+            return 'red';
         default:
-            return 'color: black';
+            return 'black';
     }
-}
+};
 
-const logs = shallowRef<Array<LogItem>>([]);
+const style = (level: LogLevel) => ({
+    color: color(level),
+    'border-bottom': '1px solid grey',
+});
+
 const resultLogs = computed(() => logs.value.reduce<Array<LogItem>>((res, item, index) => {
     if (props.filterValue && props.filterValue !== item.Level) {
         return res;
