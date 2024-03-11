@@ -43,17 +43,26 @@ const { authorize, unauthorize, reconnect, authorizationPending } = useAuthoriza
 const { isAuthorized } = useServerInteraction();
 
 const tryAuthorize = async () => {
-    await authorize(login.value, password.value);
+    const result = await authorize(login.value, password.value);
+    if (!result) {
+        return;
+    }
     isAuthorized.value = true;
 };
 
 const tryUnauthorize = async () => {
-    await unauthorize();
+    const result = await unauthorize();
+    if (!result) {
+        return;
+    }
     isAuthorized.value = false;
 };
 
 const tryReconnect = async () => {
-    await reconnect();
+    const result = await reconnect();
+    if (!result) {
+        return;
+    }
     isAuthorized.value = true;
 };
 </script>

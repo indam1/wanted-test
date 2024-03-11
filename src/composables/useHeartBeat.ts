@@ -12,7 +12,6 @@ export function useHeartBeat() {
     };
 
     watch(isActive, () => {
-        console.log('hi');
         if (isActive.value) {
             clearInterval(interval.value);
             interval.value = setInterval(() => heartBeatCall(), 30 * 1000);

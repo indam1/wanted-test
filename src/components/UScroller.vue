@@ -1,11 +1,20 @@
 <template>
     <RecycleScroller
+        id="scroller"
         v-slot="{ item }"
-        :items="resultLogs"
-        :item-size="24"
+        :items="filteredLogs"
+        :item-size="26"
         :page-mode="true"
+        :emit-update="true"
+        :buffer="1000"
+        @update="update"
     >
-        <div class="logs">
+        <div
+            :id="item.id"
+            class="logs"
+            :style="{ backgroundColor: selectedLogId === item.id ? 'white' : ''}"
+            :class="[item.isInInput ? 'logs_selected' : 'logs_default']"
+        >
             <span :style="style(item.Level)">{{ item.Timestamp }}</span>
             <span :style="style(item.Level)">{{ item.Level }}</span>
             <span :style="style(item.Level)">{{ item.Message }}</span>
@@ -15,16 +24,19 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from "vue";
-import type {LogItem} from "../../types/Items";
-import {useSubscription} from "@/composables/useSubscription";
+import {toRefs} from "vue";
 import type {LogLevel} from "@/constants";
-
-const { logs } = useSubscription();
+import useLogs from "@/composables/useLogs";
 
 const props = defineProps<{
     filterValue: string
+    selectionValue: string
+    selectedLogId: string
 }>();
+const { selectionValue, filterValue } = toRefs(props);
+const { filteredLogs } = useLogs(filterValue, selectionValue);
+
+const update = (startIndex: number, endIndex: number) => console.log(startIndex, endIndex);
 
 const color = (level: LogLevel) => {
     switch (level) {
@@ -44,19 +56,7 @@ const color = (level: LogLevel) => {
     }
 };
 
-const style = (level: LogLevel) => ({
-    color: color(level),
-    'border-bottom': '1px solid grey',
-});
-
-const resultLogs = computed(() => logs.value.reduce<Array<LogItem>>((res, item, index) => {
-    if (props.filterValue && props.filterValue !== item.Level) {
-        return res;
-    }
-
-    res.push({...item, id: index});
-    return res;
-}, []));
+const style = (level: LogLevel) => ({ color: color(level) });
 </script>
 
 <style scoped>
@@ -64,6 +64,15 @@ const resultLogs = computed(() => logs.value.reduce<Array<LogItem>>((res, item, 
     display: flex;
     flex-direction: row;
     gap: 12px;
+}
+
+.logs_default {
+    border-bottom: 1px solid grey;
+}
+
+.logs_selected {
+    background: #2c3e50;
+    border-bottom: 1px solid red;
 }
 </style>
 
